@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>我的第一个网页</title>
+  <style>
+    body {
+      font-family: 微软雅黑;
+      text-align: center;
+      margin-top: 150px;
+      background: #1e1e2e;
+    }
+    button {
+      padding: 12px 28px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #4f7cff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #3a63d6; }
+  </style>
+</head>
+<body>
+  <h1>我是赵梓阳</h1>
+  <p>打卡第二天</p >
+  <button onclick="sayHi()">点我一下</button>
+
+  <script>
+    let count = 1;
+    function sayHi() {
+        alert("你好，IT人！今天是第 " + count + " 天打卡");
+        count++;
+}
+    
+  </script>
+</body>
+</html>

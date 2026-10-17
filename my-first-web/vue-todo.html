@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue版待办清单</title>
+  <!-- 引入Vue 3（CDN方式，不用装任何东西） -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: 微软雅黑;
+      background: #f5f7fa;
+      text-align: center;
+      margin-top: 60px;
+    }
+    h1 { color: #4f7cff; }
+    #app { max-width: 400px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>📝 Vue待办清单</h1>
+    <p>{{ message }}</p >
+    <p>今天是第 {{ day }} 天学Vue</p >
+    <button @click="changeMsg">点我改文字</button>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          message: "Hello Vue!",
+          day: 1
+        }
+      },
+      methods: {
+        changeMsg() {
+          this.message = "Vue跑起来了！🎉";
+          this.day++;
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

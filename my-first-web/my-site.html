@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>我的前端作品集</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/vue-router@4"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 微软雅黑; background: #f0f2f5; }
+    .nav {
+      background: linear-gradient(135deg, #4f7cff, #6c5ce7);
+      padding: 16px 32px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    }
+    .nav .logo { color: white; font-size: 18px; font-weight: bold; margin-right: auto; }
+    .nav a {
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: all .2s;
+    }
+    .nav a:hover { background: rgba(255,255,255,.15); color: white; }
+    .nav a.router-link-active { background: rgba(255,255,255,.25); color: white; font-weight: bold; }
+    .main { max-width: 720px; margin: 40px auto; padding: 0 20px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      margin-bottom: 24px;
+    }
+    h1 { color: #2c3e50; margin-bottom: 12px; }
+    h2 { color: #4f7cff; margin-bottom: 16px; }
+    p { color: #555; line-height: 1.8; }
+    .tag {
+      display: inline-block;
+      background: #e8f4ff;
+      color: #4f7cff;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin: 4px 4px 4px 0;
+    }
+    /* Todo 样式 */
+    .todo-input { display: flex; gap: 8px; margin-bottom: 20px; }
+    .todo-input input {
+      flex: 1; padding: 10px 14px; font-size: 15px;
+      border: 1.5px solid #ddd; border-radius: 8px; outline: none;
+    }
+    .todo-input input:focus { border-color: #4f7cff; }
+    .todo-input button {
+      padding: 10px 20px; background: #4f7cff; color: white;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 15px;
+    }
+    .todo-list { list-style: none; }
+    .todo-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+      transition: background .2s;
+    }
+    .todo-item:hover { background: #f8f9ff; }
+    .todo-item .left { display: flex; align-items: center; gap: 10px; }
+    .todo-item .done { text-decoration: line-through; color: #bbb; }
+    .del-btn {
+      background: #ff6b6b; color: white; border: none;
+      border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+    }
+    .todo-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .todo-actions button {
+      flex: 1; padding: 8px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 13px; color: white; min-width: 100px;
+    }
+    .stats { color: #888; font-size: 14px; margin-top: 16px; }
+    .timeline { border-left: 3px solid #4f7cff; padding-left: 20px; margin-top: 20px; }
+    .timeline-item { margin-bottom: 16px; }
+    .timeline-item .date { color: #4f7cff; font-size: 13px; font-weight: bold; }
+    .timeline-item .desc { color: #555; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <nav class="nav">
+      <span class="logo">🚀 我的IT之路</span>
+      <router-link to="/">首页</router-link>
+      <router-link to="/todo">待办清单</router-link>
+      <router-link to="/about">关于</router-link>
+    </nav>
+
+    <div class="main">
+      <router-view></router-view>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+    const { createRouter, createWebHashHistory } = VueRouter;
+
+    // ===== 首页 =====
+    const Home = {
+      template: `
+        <div class="card">
+          <h1>👋 你好，我是赵梓阳</h1>
+          <p>一个正在从零转行IT的前端学习者。</p >
+          <p style="margin-top:12px;">这个网站是我学习Vue 12天的成果，包含路由、组件、数据持久化等完整功能。</p >
+          <div style="margin-top:20px;">
+            <span class="tag">Vue 3</span>
+            <span class="tag">Vue Router</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">HTML/CSS</span>
+          </div>
+          <p style="margin-top:24px;"><router-link to="/todo" style="color:#4f7cff;font-weight:bold;">→ 去试用我的待办清单</router-link></p >
+        </div>
+      `
+    };
+
+    // ===== 待办清单（完整版，含持久化）=====
+    let todoId = 0;
+    const Todo = {
+      template: `
+        <div class="card">
+          <h2>📝 待办清单</h2>
+          <div class="todo-input">
+            <input v-model="inputText" placeholder="输入要做的事，回车添加..." @keyup.enter="addTask">
+            <button @click="addTask">添加</button>
+          </div>
+          <ul class="todo-list">
+            <li class="todo-item" v-for="(task, index) in tasks" :key="task.id">
+              <div class="left">
+                <input type="checkbox" v-model="task.done">
+                <span :class="{ done: task.done }">{{ task.text }}</span>
+              </div>
+              <button class="del-btn" @click="removeTask(index)">删除</button>
+            </li>
+          </ul>
+          <div class="todo-actions">
+            <button style="background:#27ae60" @click="markAll">全部完成</button>
+            <button style="background:#e67e22" @click="clearDone">清除已完成</button>
+            <button style="background:#e74c3c" @click="clearAll">清空全部</button>
+          </div>
+          <p class="stats">共 {{ tasks.length }} 条，已完成 {{ doneCount }} 条</p >
+        </div>
+      `,
+      data() {
+        return { inputText: "", tasks: [] };
+      },
+      computed: {
+        doneCount() { return this.tasks.filter(t => t.done).length; }
+      },
+      watch: {
+        tasks: {
+          handler(val) { localStorage.setItem("portfolio-tasks", JSON.stringify(val)); },
+          deep: true
+        }
+      },
+      mounted() {
+        var saved = localStorage.getItem("portfolio-tasks");
+        if (saved) {
+          this.tasks = JSON.parse(saved);
+          var maxId = 0;
+          this.tasks.forEach(function(t) { if (t.id > maxId) maxId = t.id; });
+          todoId = maxId;
+        }
+      },
+      methods: {
+        addTask() {
+          if (!this.inputText.trim()) { alert("先写点什么～"); return; }
+          this.tasks.push({ id: ++todoId, text: this.inputText, done: false });
+          this.inputText = "";
+        },
+        removeTask(i) { this.tasks.splice(i, 1); },
+        markAll() { this.tasks.forEach(function(t) { t.done = true; }); },
+        clearDone() { this.tasks = this.tasks.filter(function(t) { return !t.done; }); },
+        clearAll() { if (confirm("确定清空？")) this.tasks = []; }
+      }
+    };
+
+    // ===== 关于 =====
+    const About = {
+      template: `
+        <div class="card">
+          <h2>👤 关于这个项目</h2>
+          <p>从零开始学前端，记录每一天的进步。</p >
+          <h3 style="color:#4f7cff;margin-top:24px;">📅 学习记录</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="date">Day 1-5</div>
+              <div class="desc">HTML/CSS/JS 基础 + 原生Todo应用</div>
+            </div>
+            <div class="timeline-item">
+              <div class="date">Day 6-10</div>
+              <div class="desc">Vue 3 入门 + 组件化 + 部署上线</div>
+            </div>
+            <div class="timeline-item">
+              <div class="date">Day 11-12</div>
+              <div class="desc">Vue Router + 嵌套路由 + 动态路由</div>
+            </div>
+            <div class="timeline-item">
+              <div class="date">Day 13-14</div>
+              <div class="desc">项目整合 + 多页面网站上线</div>
+            </div>
+          </div>
+          <h3 style="color:#4f7cff;margin-top:24px;">🛠 技术栈</h3>
+          <p>Vue 3 · Vue Router 4 · localStorage · GitHub Pages</p >
+        </div>
+      `
+    };
+
+    // ===== 路由配置 =====
+    const router = createRouter({
+      history: createWebHashHistory(),
+      routes: [
+        { path: "/", component: Home },
+        { path: "/todo", component: Todo },
+        { path: "/about", component: About }
+      ]
+    });
+
+    createApp({}).use(router).mount('#app');
+  </script>
+</body>
+</html>

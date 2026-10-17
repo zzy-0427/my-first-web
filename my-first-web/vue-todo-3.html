@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue Todo - Day8</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: 微软雅黑;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 40px 12px;
+    }
+    #app { max-width: 420px; margin: 0 auto; }
+    h1 { color: #4f7cff; text-align: center; }
+    .input-row { display: flex; gap: 8px; margin: 20px 0; }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button.add-btn {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4f7cff;
+      color: white;
+      cursor: pointer;
+    }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: white;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      transition: all .2s;
+    }
+    .left { display: flex; align-items: center; gap: 8px; }
+    .done-text {
+      text-decoration: line-through;
+      color: #bbb;
+    }
+    .del-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .stats { color: #888; margin-top: 16px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>📝 Vue Todo</h1>
+
+    <div class="input-row">
+      <input type="text" v-model="inputText" placeholder="输入要做的事..." @keyup.enter="addTask">
+      <button class="add-btn" @click="addTask">添加</button>
+    </div>
+
+    <ul>
+      <li v-for="(task, index) in tasks" :key="task.id">
+        <div class="left">
+          <input type="checkbox" v-model="task.done">
+          <span :class="{ 'done-text': task.done }">{{ task.text }}</span>
+        </div>
+        <button class="del-btn" @click="removeTask(index)">删除</button>
+      </li>
+    </ul>
+
+    <p class="stats">共 {{ tasks.length }} 条，已完成 {{ doneCount }} 条</p >
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    let idCounter = 3;
+
+    createApp({
+      data() {
+        return {
+          inputText: "",
+          tasks: [
+            { id: 1, text: "学Vue", done: false },
+            { id: 2, text: "写代码", done: true },
+            { id: 3, text: "做项目", done: false }
+          ]
+        }
+      },
+      computed: {
+        doneCount() {
+          return this.tasks.filter(t => t.done).length;
+        }
+      },
+      methods: {
+        addTask() {
+          if (this.inputText.trim() === "") { alert("先写点什么～"); return; }
+          this.tasks.push({ id: ++idCounter, text: this.inputText, done: false });
+          this.inputText = "";
+        },
+        removeTask(index) {
+          this.tasks.splice(index, 1);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

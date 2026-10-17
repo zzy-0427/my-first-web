@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>我的待办清单</title>
+  <style>
+    body {
+      font-family: 微软雅黑;
+      background: #f5f7fa;
+      text-align: center;
+      margin-top: 60px;
+    }
+    h1 { color: #4f7cff; }
+    input {
+      padding: 10px;
+      width: 220px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4f7cff;
+      color: white;
+      cursor: pointer;
+    }
+    ul { list-style: none; padding: 0; margin-top: 20px; }
+    li {
+      background: white;
+      width: 280px;
+      margin: 8px auto;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: left;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    @media (max-width:500px){
+      body{margin-top: 30px; padding: 0 12px;}
+      input {width: 65%}
+      button {width: 25%;padding: 10px 0;}
+      li {width: 100%; box-sizing: border-box;}
+      h1 {font-size: 22px;}
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 我的待办清单</h1>
+  <input id="taskInput" type="text" placeholder="输入要做的事...">
+  <button onclick="addTask()">添加</button>
+
+  <ul id="taskList"></ul>
+  <div id="footer" style="margin - top:24px;">
+    <span id="count">还剩 0 条</span>
+    <button onclick="clearALL()" style="margin-left: 12px;background-color: #ff4757;font-size:14px;padding: 6px 14px;border: none;border-radius: 6px;color: white;cursor: pointer;">清空全部</button>
+  </div>
+  <script>
+  window.onload = function () {
+    var saved = localStorage.getItem("tasks");
+    if (saved) {
+      var tasks = JSON.parse(saved);
+      for (var i = 0; i < tasks.length; i++) {
+        createTaskElement(tasks[i].text, tasks[i].done);
+      }
+    }
+    updateCount();
+  };
+
+  function addTask() {
+    var input = document.getElementById("taskInput");
+    var text = input.value;
+    if (text === "") { alert("先写点东西～"); return; }
+
+    createTaskElement(text, false);
+    input.value = "";
+    saveTasks();
+    updateCount();
+  }
+  function createTaskElement(text, done) {
+    var li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.justifyContent = "space-between";
+
+    var left = document.createElement("div");
+    left.style.display = "flex";
+    left.style.alignItems = "center";
+
+    var checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = done;
+    checkbox.style.marginRight = "8px";
+    checkbox.onchange = function () {
+      if (checkbox.checked) {
+        span.style.textDecoration = "line-through";
+        span.style.color = "#aaa";
+      } else {
+        span.style.textDecoration = "none";
+        span.style.color = "#333";
+      }
+      saveTasks();
+      updateCount();
+    };
+
+    var span = document.createElement("span");
+    span.innerText = text;
+    if (done) {
+      span.style.textDecoration = "line-through";
+      span.style.color = "#aaa";
+    }
+
+    left.appendChild(checkbox);
+    left.appendChild(span);
+
+    var del = document.createElement("button");
+    del.innerText = "删除";
+    del.style.cssText = "background:#ff6b6b;font-size:12px;padding:4px 8px;border:none;border-radius:4px;color:white;cursor:pointer;";
+    del.onclick = function () {
+      li.remove();
+      saveTasks();
+      updateCount();
+    };
+
+    li.appendChild(left);
+    li.appendChild(del);
+    document.getElementById("taskList").appendChild(li);
+  }
+  function saveTasks() {
+    var items = document.getElementById("taskList").children;
+    var tasks = [];
+    for (var i = 0; i < items.length; i++) {
+      var cb = items[i].querySelector('input[type="checkbox"]');
+      var txt = items[i].querySelector('span').innerText;
+      tasks.push({ text: txt, done: cb.checked });
+    }
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+  function updateCount() {
+    var total = document.getElementById("taskList").children.length;
+    var checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    var remaining = total - checked;
+    document.getElementById("count").innerText = "还剩 " + remaining + " 条未完成";
+  }
+
+  function clearAll() {
+    if (confirm("确定清空所有待办？")) {
+      document.getElementById("taskList").innerHTML = "";
+      localStorage.removeItem("tasks");
+      updateCount();
+    }
+  }
+  </script>
+</body>
+</html>

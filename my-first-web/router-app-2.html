@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue Router 嵌套 + 动态路由</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/vue-router@4"></script>
+  <style>
+    body { font-family: 微软雅黑; margin: 0; padding: 0; background: #f5f7fa; }
+    .navbar {
+      background: #2c3e50;
+      padding: 14px 24px;
+      display: flex;
+      gap: 20px;
+    }
+    .navbar a {
+      color: #ecf0f1;
+      text-decoration: none;
+      font-size: 15px;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+    .navbar a:hover { background: rgba(255,255,255,.1); }
+    .navbar a.router-link-active { background: #4f7cff; font-weight: bold; }
+    .layout { display: flex; max-width: 800px; margin: 30px auto; padding: 0 20px; gap: 20px; }
+    .sidebar { width: 150px; background: white; border-radius: 8px; padding: 16px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .sidebar a { display: block; padding: 8px 12px; color: #333; text-decoration: none; border-radius: 6px; margin-bottom: 4px; }
+    .sidebar a:hover { background: #f0f4ff; }
+    .sidebar a.router-link-active { background: #4f7cff; color: white; }
+    .content { flex: 1; background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    h2 { color: #4f7cff; margin-top: 0; }
+    .user-card { border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .user-card a { color: #4f7cff; text-decoration: none; }
+    .tag { display: inline-block; background: #e8f4ff; color: #4f7cff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部主导航 -->
+    <nav class="navbar">
+      <router-link to="/">首页</router-link>
+      <router-link to="/users">用户中心</router-link>
+      <router-link to="/about">关于</router-link>
+    </nav>
+
+    <!-- 路由出口 -->
+    <router-view></router-view>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+    const { createRouter, createWebHashHistory } = VueRouter;
+
+    // ===== 首页 =====
+    const Home = {
+      template: `
+        <div class="layout">
+          <div class="content">
+            <h2>🏠 首页</h2>
+            <p>这是一个演示<strong>嵌套路由</strong>和<strong>动态路由</strong>的项目。</p >
+            <p>点上方"用户中心"看看嵌套路由的效果。</p >
+          </div>
+        </div>
+      `
+    };
+
+    // ===== 用户中心（父路由，带子路由出口）=====
+    const UserCenter = {
+      template: `
+        <div class="layout">
+          <!-- 侧边栏子导航 -->
+          <div class="sidebar">
+            <router-link to="/users">用户列表</router-link>
+            <router-link to="/users/add">新增用户</router-link>
+          </div>
+          <!-- 子路由出口 -->
+          <div class="content">
+            <router-view></router-view>
+          </div>
+        </div>
+      `
+    };
+
+    // ===== 用户列表（子路由）=====
+    const UserList = {
+      template: `
+        <div>
+          <h2>👥 用户列表</h2>
+          <div class="user-card" v-for="user in users" :key="user.id">
+            <strong>{{ user.name }}</strong>
+            <span class="tag" style="margin-left:8px;">{{ user.role }}</span>
+            <p style="color:#888;font-size:14px;margin:8px 0 0;">{{ user.email }}</p >
+            <router-link :to="'/users/' + user.id">查看详情 →</router-link>
+          </div>
+        </div>
+      `,
+      data() {
+        return {
+          users: [
+            { id: 1, name: "张三", role: "前端开发", email: "zhangsan@example.com" },
+            { id: 2, name: "李四", role: "后端开发", email: "lisi@example.com" },
+            { id: 3, name: "王五", role: "产品经理", email: "wangwu@example.com" }
+          ]
+        };
+      }
+    };
+
+    // ===== 新增用户（子路由）=====
+    const UserAdd = {
+      template: `
+        <div>
+          <h2>➕ 新增用户</h2>
+          <p>这里放一个表单（练习用，不真正提交）</p >
+          <input v-model="name" placeholder="姓名" style="display:block;width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:6px;">
+          <input v-model="role" placeholder="职位" style="display:block;width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:6px;">
+          <button @click="submit" style="padding:8px 20px;background:#4f7cff;color:white;border:none;border-radius:6px;cursor:pointer;">提交（模拟）</button>
+          <p v-if="submitted" style="color:green;margin-top:12px;">✅ 已模拟提交：{{ name }} - {{ role }}</p >
+        </div>
+      `,
+      data() { return { name: "", role: "", submitted: false }; },
+      methods: {
+        submit() {
+          this.submitted = true;
+        }
+      }
+    };
+
+    // ===== 用户详情（动态路由）=====
+    const UserDetail = {
+      template: `
+        <div>
+          <h2>🔍 用户详情</h2>
+          <p>当前URL参数中的用户ID是：<strong style="color:#4f7cff;font-size:20px;">{{ $route.params.id }}</strong></p >
+          <div class="user-card" v-if="user">
+            <h3>{{ user.name }}</h3>
+            <p>职位：{{ user.role }}</p >
+            <p>邮箱：{{ user.email }}</p >
+            <p>用户ID：{{ user.id }}</p >
+          </div>
+          <p v-else style="color:red;">⚠️ 找不到这个用户</p >
+          <router-link to="/users" style="color:#4f7cff;">← 返回列表</router-link>
+        </div>
+      `,
+      data() {
+        return {
+          allUsers: [
+            { id: 1, name: "张三", role: "前端开发", email: "zhangsan@example.com" },
+            { id: 2, name: "李四", role: "后端开发", email: "lisi@example.com" },
+            { id: 3, name: "王五", role: "产品经理", email: "wangwu@example.com" }
+          ]
+        };
+      },
+      computed: {
+        user() {
+          var id = parseInt(this.$route.params.id);
+          return this.allUsers.find(function(u) { return u.id === id; });
+        }
+      }
+    };
+
+    // ===== 关于 =====
+    const About = {
+      template: `
+        <div class="layout">
+          <div class="content">
+            <h2>👤 关于</h2>
+            <p>Vue Router 练习项目</p >
+            <p>学到的东西：嵌套路由、动态路由、路由参数</p >
+          </div>
+        </div>
+      `
+    };
+
+    // ===== 路由配置 =====
+    const router = createRouter({
+      history: createWebHashHistory(),
+      routes: [
+        { path: "/", component: Home },
+        {
+          path: "/users",
+          component: UserCenter,
+          children: [
+            { path: "", component: UserList },           // /users → 列表
+            { path: "add", component: UserAdd },        // /users/add → 新增
+            { path: ":id", component: UserDetail }       // /users/1 → 详情（动态）
+          ]
+        },
+        { path: "/about", component: About }
+      ]
+    });
+
+    createApp({}).use(router).mount('#app');
+  </script>
+</body>
+</html>
